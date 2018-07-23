@@ -11,6 +11,8 @@ from maxent_irl import *
 from mdp import gridworld
 from mdp import value_iteration
 
+np.random.seed(1)
+
 def feature_coord(gw):
 	"""Generates feature matrix for grid world"""
 	N = gw.height * gw.width
@@ -72,6 +74,43 @@ def generate_demonstrations(gw, policy, n_trajs=100, len_traj=20, rand_start=Fal
 				break
 		trajs.append(episode)
 	
+	return trajs
+
+	
+def generate_random(gw, n_actions, n_trajs=100, len_traj=20, rand_start=False, start_pos=[0,0]):
+	"""gatheres random demonstrations
+
+	inputs:
+	gw          Gridworld - the environment
+	policy      Nx1 matrix
+	n_trajs     int - number of trajectories to generate
+	rand_start  bool - randomly picking start position or not
+	start_pos   2x1 list - set start position, default [0,0]
+	returns:
+	trajs       a list of trajectories - each element in the list is a list of Steps representing an episode
+	"""
+
+	trajs = []
+	for i in range(n_trajs):
+		if rand_start:
+			# override start_pos
+			start_pos = [np.random.randint(0, gw.height), np.random.randint(0, gw.width)]
+
+		episode = []
+		gw.reset(start_pos)
+		cur_state = start_pos
+		cur_state, action, next_state, reward, is_done = gw.step(np.random.randint(n_actions))
+		episode.append(Step(cur_state=gw.pos2idx(cur_state), action=action, next_state=gw.pos2idx(next_state), reward=reward, done=is_done))
+		
+		# while not is_done:
+		for _ in range(len_traj):
+			cur_state, action, next_state, reward, is_done = gw.step(np.random.randint(n_actions))
+			episode.append(Step(cur_state=gw.pos2idx(cur_state), action=action, next_state=gw.pos2idx(next_state), reward=reward, done=is_done))
+			if is_done:
+				break
+		
+		trajs.append(episode)
+
 	return trajs
 
 def main():
@@ -137,11 +176,7 @@ def main():
 	rewards_gt = np.reshape(rmap_gt, height*width, order='F')
 	P_a_true = gw.get_transition_mat()
 
-	# get true value function and policy from reward map
-	values_gt, policy_gt = value_iteration.value_iteration(P_a_true, rewards_gt, gamma, error=0.01, deterministic=True)
-
-	np.random.seed(1)
-	trajs = generate_demonstrations(gw, policy_gt, n_trajs=n_trajs, len_traj=l_traj, rand_start=rand_start)
+	trajs = generate_random(gw, n_actions, n_trajs=n_trajs, len_traj=l_traj, rand_start=rand_start)
 
 	# get approximation of state transition dynamics
 	P_a_approx = np.zeros((n_states, n_states, n_actions))
@@ -170,6 +205,9 @@ def main():
 	# feat_map = feature_basis(gw)
 	# feat_map = feature_coord(gw)
 
+	trajs = generate_demonstrations(gw, policy_gt, n_trajs=n_trajs, len_traj=l_traj, 
+									rand_start=rand_start)
+
 	# perform inverse reinforcement learning to get reward function
 	rewards = maxent_irl(feat_map, P_a, gamma, trajs, learning_rate, n_iters)
 	values, _ = value_iteration.value_iteration(P_a, rewards, gamma, error=0.01, deterministic=True)
@@ -187,7 +225,7 @@ def main():
 	plt.show()
 
 	# plots for state transition dynamics
-	plt.figure(figsize=(20,4))
+	plt.figure(figsize=(10,4))
 	plt.subplot(2, 1, 1)
 	img_utils.heatmap2d(np.reshape(P_a_true[10,:,2], (height,width), order='F'), 'True Dist', block=False)
 	plt.subplot(2, 1, 2)
