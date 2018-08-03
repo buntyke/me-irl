@@ -121,28 +121,36 @@ def main():
 	# argument parser for command line arguments
 	parser = argparse.ArgumentParser(description=None)
 
-	parser.add_argument('-g', '--gamma', default=0.9, type=float, help='discount factor')
-	parser.add_argument('-ni', '--n_iters', default=20, type=int, help='number of iterations')
-	parser.add_argument('-wid', '--width', default=5, type=int, help='width of the gridworld')
-	parser.add_argument('-hei', '--height', default=5, type=int, help='height of the gridworld')
-	parser.add_argument('-lr', '--learning_rate', default=0.01, type=float, help='learning rate')
-	parser.add_argument('-l', '--l_traj', default=20, type=int, help='length of expert trajectory')
-	parser.add_argument('-t', '--n_trajs', default=100, type=int, help='number of expert trajectories')
-	parser.add_argument('-a', '--act_random', default=0.3, type=float, 
-						help='probability of acting randomly')
+	parser.add_argument('-wid', '--width', default=5, type=int, 
+						help='width of the gridworld')
+	parser.add_argument('-hei', '--height', default=5, type=int, 
+						help='height of the gridworld')
+	parser.add_argument('-lr', '--learning_rate', default=0.01, type=float, 
+						help='learning rate')
+	parser.add_argument('-l', '--l_traj', default=20, type=int, 
+						help='length of expert trajectory')
+
 	parser.add_argument('--no-rand_start', dest='rand_start', action='store_false', 
 						help='when sampling trajectories, fix start positions')
 	parser.add_argument('--rand_start', dest='rand_start', action='store_true', 
 						help='when sampling trajectories, randomly pick start positions')
 	parser.add_argument('--approx', dest='approx', action='store_true', 
 						help='flag to perform approximation of psa')
+
+	parser.add_argument('-g', '--gamma', default=0.9, type=float, 
+						help='discount factor')
+	parser.add_argument('-n', '--n_iters', default=20, type=int, 
+						help='number of iterations')
+	parser.add_argument('-t', '--n_trajs', default=100, type=int, 
+						help='number of expert trajectories')
+	parser.add_argument('-a', '--act_random', default=0.3, type=float, 
+						help='probability of acting randomly')
 	
 	# set default value for rand_start variable
 	parser.set_defaults(rand_start=False)
 
 	# parse and print arguments
 	args = parser.parse_args()
-	print args
 
 	# arguments for environment and irl algorithm
 	r_max = 1 
